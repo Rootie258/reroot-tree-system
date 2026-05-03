@@ -1,0 +1,236 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Sprout, 
+  Droplets, 
+  Trees, 
+  Apple, 
+  AlertCircle, 
+  RotateCcw, 
+  Sparkles,
+  CircleDot,
+  Nut,
+  ArrowRight,
+  ArrowLeft
+} from 'lucide-react';
+
+// Bảng màu chuẩn Brand Visual Guide
+const COLORS = {
+  bone: '#E5D7C4',      // Nền chính (>50%)
+  tan: '#CFBB99',       // Hỗ trợ
+  mossGreen: '#889063',  // Điểm nhấn
+  kombuGreen: '#354024', // Anchor (lực)
+  charcoal: '#2E2A26'    // Text
+};
+
+const STAGES = [
+  { id: 1, title: "Chuẩn bị", subtitle: "Nền đất", status: "Bạn có thôi thúc muốn làm riêng nhưng chưa biết bán gì cụ thể.", description: "Đây là lúc tích lũy 'dinh dưỡng' từ sách vở : khóa học và trăn trở về giá trị sống để tạo lớp mùn màu mỡ cho gốc cây bền vững.", expert: "Self-Discovery : Xác định giá trị cốt lõi và sứ mệnh cá nhân.", iconType: 'emoji', iconValue: '🕳️', stageColor: COLORS.tan, rootPower: "10%" },
+  { id: 2, title: "Chọn giống", subtitle: "Hạt giống tâm hồn", status: "Đứng trước quá nhiều ý tưởng và phải chọn một.", description: "Hạt giống là sự giao thoa giữa thế mạnh bản thân và nhu cầu thế giới : phải dựa trên giá trị từ tâm (Heart-based value).", expert: "Market-Founder Fit : Tìm điểm chạm giữa Ikigai và nhu cầu thực tế.", iconType: 'lucide', iconValue: Nut, stageColor: COLORS.mossGreen, rootPower: "20%" },
+  { id: 3, title: "Gieo hạt", subtitle: "Hành động đức tin", status: "Bắt đầu gửi đi những bài đăng và lời mời chào đầu tiên.", description: "Giai đoạn của niềm tin khi chưa có phản hồi : hạt giống cần thời gian thích nghi dưới lòng đất.", expert: "Market Entry : Xây dựng sự hiện diện và thử nghiệm thông điệp.", iconType: 'lucide', iconValue: CircleDot, stageColor: COLORS.tan, rootPower: "30%" },
+  { id: 4, title: "Ươm mầm", subtitle: "Vùng tối của Solo-preneur", status: "Làm việc cật lực : kiêm nhiệm mọi vai trò nhưng thu nhập chưa ổn định.", description: "Giai đoạn thử sai : rễ đang âm thầm bám sâu để tìm insight khách hàng.", expert: "MVP Testing : Tập trung vào phản hồi của khách hàng hơn là lợi nhuận.", iconType: 'lucide', iconValue: Droplets, stageColor: COLORS.mossGreen, rootPower: "45%" },
+  { id: 5, title: "Nảy mầm", subtitle: "Khoảnh khắc Eureka", status: "Có đơn hàng đầu tiên từ người lạ hoặc phản hồi tích cực.", description: "Tín hiệu chứng minh mô hình có giá trị thực : đang đi đúng hướng.", expert: "Product-Market Fit : Tìm ra công thức tạo giá trị bền vững.", iconType: 'lucide', iconValue: Sprout, stageColor: COLORS.mossGreen, rootPower: "55%" },
+  { id: 6, title: "Cây non", subtitle: "Giai đoạn 'Làm tất ăn cả'", status: "Có khách đều đặn nhưng người chủ luôn trong tình trạng quá tải.", description: "Cây đã có hình hài nhưng rễ chưa sâu : nếu chủ dừng thì cây dừng.", expert: "Standardization : Đóng gói quy trình (SOPs) và tự động hóa.", iconType: 'emoji', iconValue: '🪴', stageColor: COLORS.mossGreen, rootPower: "65%" },
+  { id: 7, title: "Cây trưởng thành", subtitle: "Định hình bản sắc", status: "Thương hiệu cá nhân có chỗ đứng : biết rõ đối tượng phục vụ và từ chối.", description: "Có sự tách biệt giữa con người chủ và thương hiệu : vận hành có hệ thống hỗ trợ.", expert: "Positioning : Tập trung vào chiến lược dài hạn thay vì đơn hàng.", iconType: 'lucide', iconValue: Trees, stageColor: COLORS.kombuGreen, rootPower: "80%" },
+  { id: 8, title: "Cây ra quả", subtitle: "Sự thịnh vượng bền vững", status: "Thu nhập ổn định : bắt đầu chia sẻ và dạy lại cho người khác.", description: "Gieo nhân lành gặt quả ngọt : thương hiệu tạo giá trị cho cộng đồng.", expert: "Scaling : Mở rộng hệ sinh thái sản phẩm dựa trên giá trị lõi.", iconType: 'lucide', iconValue: Apple, stageColor: COLORS.tan, rootPower: "100%" },
+  { id: 9, title: "Cây bệnh", subtitle: "Khủng hoảng hiện sinh", status: "Doanh thu tốt nhưng thấy trống rỗng : hoặc sụt giảm không rõ nguyên nhân.", description: "Đang 'chạy theo ngọn' : mất kết nối với trái tim : gồng mình thành hình mẫu giả tạo.", expert: "Identity Crisis : Sai lệch giữa hình ảnh bên ngoài và bản sắc bên trong.", iconType: 'lucide', iconValue: AlertCircle, stageColor: COLORS.charcoal, rootPower: "40%" },
+  { id: 10, title: "Cây cần được RE:ROOT", subtitle: "Dừng lại để bắt đầu", status: "Sẵn sàng đập đi xây lại : từ bỏ dịch vụ hái ra tiền nhưng không còn niềm vui.", description: "Khoảnh khắc dũng cảm quay về với giá trị nguyên bản (Back to the origin).", expert: "Strategic Pivot : Thay đổi tư duy quản trị và mô hình kinh doanh.", iconType: 'lucide', iconValue: RotateCcw, stageColor: COLORS.kombuGreen, rootPower: "20%" },
+  { id: 11, title: "Cây hồi sinh", subtitle: "Sống thật", status: "Phiên bản doanh nghiệp mới ra đời nhẹ nhàng : chân thực và bền bỉ hơn.", description: "Cây sống đúng bản chất : kinh doanh tự nhiên như hơi thở và đầy năng lượng.", expert: "Authentic Branding : Phát triển bền vững dựa trên luật nhân quả.", iconType: 'lucide', iconValue: Sparkles, stageColor: COLORS.mossGreen, rootPower: "90%" }
+];
+
+export default function App() {
+  const [currentStage, setCurrentStage] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const stage = STAGES[currentStage] || STAGES[0];
+
+  const handleNext = () => {
+    if (currentStage < STAGES.length - 1) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStage(prev => prev + 1);
+        setIsTransitioning(false);
+      }, 500);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStage > 0) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStage(prev => prev - 1);
+        setIsTransitioning(false);
+      }, 500);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center p-8 md:p-16 transition-colors duration-1000 overflow-hidden" style={{ backgroundColor: COLORS.bone, color: COLORS.charcoal }}>
+      <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+      
+      <style dangerouslySetInnerHTML={{ __html: `
+        body { 
+          font-family: 'Mulish', sans-serif; 
+          margin: 0; 
+          -webkit-font-smoothing: antialiased;
+          letter-spacing: -0.01em;
+        }
+        .serif { font-family: 'Lora', serif; }
+        .transition-stage { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .root-line { width: 1px; background-color: ${COLORS.kombuGreen}; opacity: 0.15; }
+        .dot-pause { color: ${COLORS.mossGreen}; font-weight: 600; padding: 0 4px; }
+      `}} />
+
+      {/* Header */}
+      <header className="w-full max-w-6xl mb-12 relative z-20">
+        <div className="flex justify-between items-baseline border-b border-stone-300/40 pb-6">
+          <div className="serif text-2xl tracking-tight flex items-center gap-3">
+            <span className="font-medium">RE:ROOT</span>
+            <span className="text-sm opacity-40 italic">Co-Creation Garden</span>
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.4em] opacity-40 font-semibold">
+            Root to Rise
+          </div>
+        </div>
+      </header>
+
+      {/* Minimal Navigation Bar - 30% Căng */}
+      <nav className="w-full max-w-6xl mb-20 relative z-30">
+        <div className="flex items-center justify-between">
+          <button onClick={handlePrev} disabled={currentStage === 0} className="p-2 disabled:opacity-0 transition-all hover:-translate-x-1">
+            <ArrowLeft size={20} strokeWidth={1.5} />
+          </button>
+
+          <div className="flex gap-4 md:gap-6 items-center">
+            {STAGES.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => { setIsTransitioning(true); setTimeout(() => { setCurrentStage(idx); setIsTransitioning(false); }, 400); }}
+                className="group relative py-2"
+              >
+                <div 
+                  className={`h-[2px] transition-all duration-700 ${idx === currentStage ? 'w-6 md:w-10' : 'w-1 md:w-2'}`}
+                  style={{ backgroundColor: idx === currentStage ? COLORS.kombuGreen : COLORS.tan }}
+                />
+                {idx === currentStage && (
+                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] uppercase tracking-widest font-bold opacity-40">
+                    Step {idx + 1}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={handleNext} disabled={currentStage === STAGES.length - 1} className="p-2 disabled:opacity-0 transition-all hover:translate-x-1">
+            <ArrowRight size={20} strokeWidth={1.5} />
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Content - 70% Yên */}
+      <main className="w-full max-w-6xl grid md:grid-cols-[1.4fr_0.6fr] gap-20 items-start flex-grow relative z-20">
+        
+        {/* Text Side */}
+        <div className={`transition-stage ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
+          <div className="mb-12">
+            <div className="serif text-lg italic opacity-40 mb-4 flex items-center gap-4">
+              <div className="w-12 h-[1px]" style={{ backgroundColor: COLORS.tan }}></div>
+              {stage.subtitle}
+            </div>
+            <h2 className="serif text-5xl md:text-8xl font-light leading-tight text-stone-900">
+              {stage.title}<span style={{ color: COLORS.mossGreen }}>:</span>
+            </h2>
+          </div>
+
+          <div className="max-w-xl space-y-12">
+            <p className="text-2xl md:text-3xl font-light italic leading-relaxed opacity-90 border-l border-stone-300 pl-10 py-2">
+              {stage.status}
+            </p>
+            
+            <div className="space-y-10 text-lg opacity-80 leading-loose font-light">
+              <p>{stage.description.split(':').map((part, i, arr) => (
+                <React.Fragment key={i}>
+                  {part}
+                  {i < arr.length - 1 && <span className="dot-pause">:</span>}
+                </React.Fragment>
+              ))}</p>
+              
+              <div className="pt-10 border-t border-stone-200/60">
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30">Chiến lược gốc :</span>
+                  <div className="text-xl font-medium tracking-tight" style={{ color: COLORS.kombuGreen }}>
+                    {stage.expert}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Side */}
+        <div className="sticky top-20 flex flex-col items-center">
+          <div className="relative w-full aspect-square flex items-center justify-center">
+            {/* Ambient Light Circle */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div 
+                className="w-3/4 h-3/4 rounded-full blur-[120px] transition-all duration-1000 opacity-20"
+                style={{ backgroundColor: stage.stageColor }}
+              />
+            </div>
+            
+            {/* Stage Icon */}
+            <div className={`transition-stage transform ${isTransitioning ? 'scale-90 rotate-3 opacity-0' : 'scale-100 rotate-0 opacity-100'}`}>
+               <div style={{ color: COLORS.kombuGreen }}>
+                {stage.iconType === 'emoji' ? (
+                  <div className="text-8xl filter grayscale-[0.2] opacity-80">{stage.iconValue}</div>
+                ) : (
+                  <stage.iconValue size={100} strokeWidth={0.5} />
+                )}
+               </div>
+            </div>
+          </div>
+
+          {/* Root Strength Visualizer */}
+          <div className="w-full mt-16 px-10 py-8 bg-[#E9DCC9]/40 backdrop-blur-sm border border-stone-200/20 rounded-sm">
+             <div className="text-[9px] uppercase tracking-[0.3em] font-bold mb-6 opacity-30 flex items-center gap-3">
+                <div className="w-1 h-1 rounded-full bg-stone-400"></div>
+                Năng lực bám rễ
+             </div>
+             <div className="flex items-end gap-[2px] h-10 mb-2">
+                {[...Array(20)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="flex-1 transition-all duration-1000"
+                    style={{ 
+                      height: `${10 + Math.random() * 90}%`, 
+                      backgroundColor: i/20 < parseFloat(stage.rootPower)/100 ? COLORS.mossGreen : COLORS.tan,
+                      opacity: i/20 < parseFloat(stage.rootPower)/100 ? 0.8 : 0.1
+                    }}
+                  />
+                ))}
+             </div>
+             <div className="serif text-[11px] italic opacity-40 text-right mt-4 tracking-wider">
+               Tĩnh lặng có chiều sâu : Sống đúng căn nguyên.
+             </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full max-w-6xl mt-24 pt-8 border-t border-stone-300/30 flex flex-col md:flex-row justify-between items-center gap-6 pb-12">
+        <div className="text-[10px] uppercase tracking-[0.3em] opacity-30 font-bold">
+          © 2024 RE:ROOT : Garden of Growth
+        </div>
+        <div className="flex gap-10 text-[9px] uppercase tracking-[0.2em] font-bold opacity-40">
+          <span className="hover:opacity-100 cursor-default transition-opacity">Authenticity</span>
+          <span className="hover:opacity-100 cursor-default transition-opacity">Heart-based</span>
+          <span className="hover:opacity-100 cursor-default transition-opacity">Sustainability</span>
+        </div>
+      </footer>
+
+      {/* Background Subtle Elements */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[60%] rounded-full blur-[150px] opacity-[0.05]" style={{ backgroundColor: COLORS.mossGreen }} />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[50%] rounded-full blur-[150px] opacity-[0.03]" style={{ backgroundColor: COLORS.kombuGreen }} />
+      </div>
+    </div>
+  );
+}
